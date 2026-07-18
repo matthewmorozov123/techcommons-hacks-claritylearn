@@ -1,0 +1,1627 @@
+/* Every color in the app resolves through one of these tokens, so switching
+   themes is purely a matter of swapping the html[data-theme="dark"] block
+   below — no component needs its own dark-mode rules. */
+:root {
+  --bg: #f4f7f6;
+  --panel: #ffffff;
+  --ink: #16241f;
+  --muted: #5c6f6a;
+  --brand: #0d9488;
+  --brand-dark: #0f766e;
+  --brand-light: #ccfbf1;
+  /* Text/icons sitting on top of a --brand fill. */
+  --on-brand: #ffffff;
+  --border: #dde6e3;
+  --dropzone-border: #c9d6d2;
+  --field-bg: #ffffff;
+  --overlay: rgba(22, 36, 31, 0.35);
+  --overlay-strong: rgba(22, 36, 31, 0.8);
+  --disabled-bg: #d7e2e0;
+  --disabled-text: #8ea19d;
+  --menu-disabled-text: #b7bcc9;
+  --menu-disabled-icon: #cdd1dc;
+  --danger: #dc2626;
+  --danger-text: #991b1b;
+  --danger-bg: #fef2f2;
+  --success: #059669;
+  --success-text: #065f46;
+  --success-bg: #ecfdf5;
+  --toggle-track: #dbe1f5;
+  --toggle-thumb: #38bdf8;
+  --radius: 12px;
+  --shadow-sm: 0 1px 2px rgba(15, 30, 27, 0.06), 0 1px 3px rgba(15, 30, 27, 0.08);
+  --shadow-md: 0 6px 16px rgba(15, 30, 27, 0.1), 0 2px 6px rgba(15, 30, 27, 0.06);
+  --shadow-drawer: 6px 0 24px rgba(22, 36, 31, 0.18);
+  --font-display: "Outfit", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+}
+
+/* Dark theme. The accent inverts — --brand-dark is the *lighter* teal here,
+   since it's used for text and icons that need to lift off dark surfaces. */
+html[data-theme="dark"] {
+  --bg: #0b1120;
+  --panel: #131c2e;
+  --ink: #e7eaf3;
+  --muted: #8b93a7;
+  --brand: #2dd4bf;
+  --brand-dark: #5eead4;
+  --brand-light: #134e4a;
+  --on-brand: #06231f;
+  --border: #263049;
+  --dropzone-border: #33405e;
+  --field-bg: #0f1728;
+  --overlay: rgba(3, 7, 18, 0.6);
+  --overlay-strong: rgba(3, 7, 18, 0.85);
+  --disabled-bg: #1c2740;
+  --disabled-text: #5a6480;
+  --menu-disabled-text: #5a6480;
+  --menu-disabled-icon: #4a5470;
+  --danger: #f87171;
+  --danger-text: #fca5a5;
+  --danger-bg: #2a1416;
+  --success: #34d399;
+  --success-text: #6ee7b7;
+  --success-bg: #0d2a22;
+  --toggle-track: #1a2540;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.3);
+  --shadow-drawer: 6px 0 24px rgba(0, 0, 0, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* The hidden attribute must always win, even over class rules that set a
+   display value (e.g. .lightbox { display: flex }). Without this, a `hidden`
+   overlay stays visible and covers the page. */
+[hidden] {
+  display: none !important;
+}
+
+/* Guards against any accidental horizontal overflow. Without this, even a
+   sliver of overflow lets iOS Safari's elastic bounce drag the whole page —
+   fixed-position elements like the header buttons and theme toggle included —
+   sideways during a scroll gesture, which reads as controls drifting toward
+   the edge. Must be on html specifically: browsers special-case the root
+   element so this doesn't change what position:fixed is measured against
+   (unlike setting it on an arbitrary descendant, which would). */
+html {
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.45;
+  overflow-x: hidden;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+}
+
+.site-header {
+  position: relative;
+  padding: 1.75rem 1.5rem 0.5rem;
+  text-align: center;
+}
+
+.header-btns {
+  position: fixed;
+  left: 1.5rem;
+  top: 1.5rem;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.header-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--brand-dark);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.header-icon-btn:hover {
+  background: var(--brand-light);
+  border-color: var(--brand);
+}
+
+.header-icon-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.header-icon-btn.newchat {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--on-brand);
+}
+
+.header-icon-btn.newchat:hover {
+  background: var(--brand-dark);
+  border-color: var(--brand-dark);
+}
+
+/* Theme toggle — mirrors .header-btns on the opposite side of the header. */
+.theme-toggle {
+  position: fixed;
+  right: 1.5rem;
+  top: 1.5rem;
+  z-index: 15;
+  width: 64px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--toggle-track);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 3px;
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+/* Both icons sit in the track; the thumb slides over whichever is inactive. */
+.toggle-icons {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  pointer-events: none;
+}
+
+.toggle-icons svg {
+  width: 13px;
+  height: 13px;
+}
+
+.toggle-sun {
+  stroke: #f5b90d;
+  fill: none;
+}
+
+.toggle-moon {
+  fill: #8ea3c9;
+}
+
+.toggle-thumb {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--toggle-thumb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(0);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html[data-theme="dark"] .toggle-thumb {
+  transform: translateX(30px);
+}
+
+.toggle-thumb svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* The thumb carries the icon for the mode you're currently in. */
+.thumb-moon {
+  display: none;
+}
+
+html[data-theme="dark"] .thumb-sun {
+  display: none;
+}
+
+html[data-theme="dark"] .thumb-moon {
+  display: block;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--brand);
+  color: var(--on-brand);
+  box-shadow: var(--shadow-sm);
+}
+
+.brand-mark svg {
+  width: 20px;
+  height: 20px;
+}
+
+.brand h1 {
+  margin: 0;
+  font-weight: 700;
+  color: var(--brand-dark);
+}
+
+.tagline {
+  margin: 0.4rem 0 0;
+  color: var(--muted);
+}
+
+.stepper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.5rem;
+  max-width: 1100px;
+  margin: 1.25rem auto 0.5rem;
+  padding: 0 1.5rem;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted);
+}
+
+.step-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  color: var(--muted);
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.step-circle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.step-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.step.is-active .step-circle {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: var(--on-brand);
+  box-shadow: var(--shadow-md);
+}
+
+.step.is-active .step-label {
+  color: var(--brand-dark);
+}
+
+.step.is-complete .step-circle {
+  border-color: var(--brand);
+  background: var(--brand-light);
+  color: var(--brand-dark);
+}
+
+.step.is-complete .step-label {
+  color: var(--ink);
+}
+
+.step-line {
+  width: 48px;
+  height: 2px;
+  background: var(--border);
+  margin-top: 19px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 1.25rem;
+  max-width: 1100px;
+  margin: 1.5rem auto;
+  padding: 0 1.5rem;
+}
+
+.output-panel {
+  grid-column: 1 / -1;
+}
+
+section {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 1.25rem;
+  /* Grid items default to min-width:auto, so the 1fr track sizes itself to fit
+     whichever child's content refuses to shrink (a <select>'s widest option,
+     unwrapped button text) — even past the grid container's own width. This
+     was the real cause of horizontal overflow on phones: the whole page
+     scrolled sideways because one of these sections wouldn't shrink below its
+     content's natural width. min-width:0 lets the track shrink to fit the
+     container instead, so overflow gets handled inside each section (text
+     wraps, a <select> clips) rather than blowing out the whole layout. */
+  min-width: 0;
+}
+
+h2 {
+  margin-top: 0;
+  font-size: 1.1rem;
+}
+
+.input-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--muted);
+  font-family: inherit;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.tab-btn.active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--on-brand);
+  box-shadow: var(--shadow-sm);
+}
+
+.tab-panel[hidden] {
+  display: none;
+}
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 120px;
+  border: 2px dashed var(--dropzone-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-align: center;
+  padding: 1rem;
+  color: var(--muted);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.dropzone:hover,
+.dropzone.dragover {
+  border-color: var(--brand);
+  background: var(--brand-light);
+}
+
+.dropzone-icon {
+  display: inline-flex;
+  color: var(--brand);
+}
+
+.dropzone-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.pages-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.pages-row:empty {
+  margin-top: 0;
+}
+
+.page-chip {
+  position: relative;
+  width: 84px;
+}
+
+.page-thumb {
+  display: block;
+  width: 84px;
+  height: 108px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  cursor: zoom-in;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.page-thumb:hover {
+  border-color: var(--brand);
+  box-shadow: var(--shadow-sm);
+}
+
+.page-remove {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--danger);
+  padding: 0;
+}
+
+.page-remove svg {
+  width: 11px;
+  height: 11px;
+}
+
+.page-label {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 0.35rem;
+}
+
+.reorder-btns {
+  position: absolute;
+  bottom: 22px;
+  right: -3px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reorder-btns button {
+  width: 18px;
+  height: 16px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  color: var(--muted);
+  box-shadow: var(--shadow-sm);
+}
+
+.reorder-btns button:hover:not(:disabled) {
+  border-color: var(--brand);
+  color: var(--brand-dark);
+}
+
+.reorder-btns button svg {
+  width: 10px;
+  height: 10px;
+}
+
+.reorder-btns button:disabled {
+  cursor: not-allowed;
+  background: var(--bg);
+  opacity: 0.45;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--overlay-strong);
+  z-index: 30;
+  cursor: zoom-out;
+}
+
+.lightbox img {
+  max-width: 95vw;
+  max-height: 92vh;
+  border-radius: var(--radius);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+textarea,
+select {
+  font-family: inherit;
+}
+
+textarea {
+  width: 100%;
+  font-size: 0.95rem;
+  padding: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--field-bg);
+  color: var(--ink);
+  resize: vertical;
+}
+
+.field {
+  margin-bottom: 1rem;
+}
+
+.field label,
+.field-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.3rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.field-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--brand);
+  flex-shrink: 0;
+}
+
+.field select {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--field-bg);
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+.btn-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* Toggle buttons carry all their icons at once and swap by class. Only the
+   idle icon shows by default — without hiding .icon-active here, a button
+   renders both its idle and active icons side by side. */
+.icon-loading,
+.icon-active,
+.is-playing .icon-idle {
+  display: none;
+}
+
+.is-loading .icon-idle {
+  display: none;
+}
+
+.is-loading .icon-loading {
+  display: inline-flex;
+}
+
+.is-playing .icon-active {
+  display: inline-flex;
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.primary-btn,
+.secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.1rem;
+  border-radius: var(--radius);
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: background 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease, transform 0.1s ease;
+}
+
+.primary-btn {
+  background: var(--brand);
+  color: var(--on-brand);
+  width: 100%;
+  box-shadow: var(--shadow-md);
+}
+
+.primary-btn:disabled {
+  background: var(--disabled-bg);
+  color: var(--disabled-text);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.primary-btn:not(:disabled):hover {
+  background: var(--brand-dark);
+  transform: translateY(-1px);
+}
+
+.secondary-btn {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--ink);
+}
+
+.secondary-btn:disabled {
+  color: var(--muted);
+  background: var(--bg);
+  cursor: not-allowed;
+}
+
+.secondary-btn:not(:disabled):hover {
+  border-color: var(--brand);
+  color: var(--brand-dark);
+  box-shadow: var(--shadow-sm);
+}
+
+.secondary-btn.is-playing {
+  background: var(--brand-light);
+  border-color: var(--brand);
+  color: var(--brand-dark);
+}
+
+.read-aloud-btn.is-playing {
+  background: var(--brand-dark);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.card-header h2 {
+  margin: 0;
+}
+
+.gear-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--brand-dark);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.gear-btn:hover {
+  background: var(--brand-light);
+}
+
+.gear-btn.is-open {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--on-brand);
+}
+
+.gear-btn .btn-icon {
+  width: 19px;
+  height: 19px;
+}
+
+.gear-wrap {
+  position: relative;
+}
+
+.playback-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.read-aloud-btn {
+  width: auto;
+  border-radius: 999px;
+  padding: 0.75rem 1.4rem;
+}
+
+.pause-resume-btn,
+.download-btn {
+  border-radius: 999px;
+  padding: 0.75rem 1.4rem;
+}
+
+.popover {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  width: 280px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  padding: 1.1rem 1.25rem 1.25rem;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 10;
+}
+
+.popover.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.popover-title {
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: 0 0 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.popover .field {
+  margin-bottom: 0.85rem;
+}
+
+.preview-btn {
+  width: 100%;
+  background: var(--panel);
+  border: 1.5px solid var(--brand);
+  color: var(--brand-dark);
+}
+
+.preview-btn:not(:disabled):hover {
+  background: var(--brand-light);
+  border-color: var(--brand);
+  color: var(--brand-dark);
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin: 0.5rem 0 0;
+}
+
+.output-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.output-col h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.95rem;
+}
+
+.output-text {
+  min-height: 100px;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  white-space: pre-wrap;
+  font-size: 0.95rem;
+}
+
+.output-text.placeholder {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.output-text.fade-in {
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.quiz-panel {
+  grid-column: 1 / -1;
+}
+
+.quiz-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.quiz-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--brand-dark);
+}
+
+.quiz-toggle-label .btn-icon {
+  color: var(--brand);
+}
+
+.chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.chevron.open {
+  transform: rotate(180deg);
+}
+
+.quiz-sub {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 0.3rem 0 0 1.75rem;
+}
+
+.quiz-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease;
+}
+
+.quiz-body.open {
+  max-height: 900px;
+  margin-top: 1.1rem;
+}
+
+.quiz-question {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+
+.quiz-question:first-child {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.quiz-q {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin: 0 0 0.6rem;
+}
+
+.quiz-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  background: var(--bg);
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.quiz-choice:hover {
+  border-color: var(--brand);
+}
+
+.quiz-choice.correct {
+  border-color: var(--success);
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+.quiz-choice.incorrect {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.quiz-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--muted);
+  flex-shrink: 0;
+}
+
+.quiz-choice.correct .quiz-dot {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+.quiz-choice.incorrect .quiz-dot {
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+.quiz-choice.disabled {
+  cursor: default;
+}
+
+.quiz-score-row {
+  margin-top: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+}
+
+.quiz-score {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--brand-dark);
+}
+
+.quiz-retry-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.quiz-retry-link:hover {
+  color: var(--brand-dark);
+}
+
+.quiz-loading,
+.quiz-error {
+  font-size: 0.85rem;
+  color: var(--muted);
+  padding: 0.5rem 0;
+}
+
+.quiz-error {
+  color: var(--danger-text);
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 20;
+}
+
+.drawer-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.history-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 330px;
+  max-width: 85vw;
+  background: var(--panel);
+  box-shadow: var(--shadow-drawer);
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+  z-index: 21;
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.history-drawer.open {
+  transform: translateX(0);
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.1rem;
+}
+
+.drawer-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--brand-dark);
+}
+
+.drawer-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: none;
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.drawer-close:hover {
+  background: var(--brand-light);
+  color: var(--brand-dark);
+}
+
+.drawer-close svg {
+  width: 15px;
+  height: 15px;
+}
+
+.project-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.9rem;
+  /* Anchors the absolutely-positioned delete-confirm popover. */
+  position: relative;
+}
+
+/* Delete-project confirmation. Positioned from JS (left/top), which measures
+   the chip it belongs to. */
+.project-confirm {
+  position: absolute;
+  z-index: 23;
+  width: 172px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  padding: 0.6rem 0.7rem;
+}
+
+.project-confirm-msg {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink);
+  /* Project names are user-supplied and can be long with no spaces. */
+  overflow-wrap: anywhere;
+}
+
+.project-confirm-note {
+  margin: 0.2rem 0 0;
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+
+.project-confirm-row {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.project-confirm-btn {
+  flex: 1;
+  padding: 0.3rem 0;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.project-confirm-btn:hover {
+  border-color: var(--brand);
+  color: var(--brand-dark);
+}
+
+.project-confirm-btn.danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.project-confirm-btn.danger:hover {
+  background: var(--danger-bg);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.project-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.project-chip:hover {
+  background: var(--brand-light);
+  color: var(--brand-dark);
+}
+
+.project-chip.active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--on-brand);
+}
+
+.project-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  line-height: 1;
+  opacity: 0.65;
+}
+
+.project-chip-remove:hover {
+  opacity: 1;
+}
+
+.project-chip-add {
+  color: var(--brand-dark);
+  border-style: dashed;
+  background: none;
+}
+
+.project-name-input {
+  width: 130px;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ink);
+  border: 1px solid var(--brand);
+  border-radius: 999px;
+  padding: 0.25rem 0.6rem;
+  background: var(--panel);
+}
+
+.project-name-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--brand-light);
+}
+
+.drawer-list {
+  flex: 1;
+  overflow-y: auto;
+  margin: 0 -0.25rem;
+}
+
+.history-item {
+  position: relative;
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.7rem 0.75rem;
+  margin-bottom: 0.25rem;
+  border: none;
+  border-radius: 14px;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.15s ease;
+}
+
+.history-item:hover {
+  background: var(--bg);
+}
+
+.history-item:hover .history-kebab,
+.history-item.menu-open .history-kebab {
+  opacity: 1;
+}
+
+.history-item.menu-open .history-kebab {
+  background: var(--brand-light);
+}
+
+.history-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.history-snippet {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  /* At rest: silently clip (no dots). On hover: show the ellipsis without
+     changing the clip width, so nothing reflows between states. */
+  text-overflow: clip;
+}
+
+.history-item:hover .history-snippet {
+  text-overflow: ellipsis;
+}
+
+.history-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+}
+
+.history-chip {
+  font-size: 0.66rem;
+  font-weight: 600;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.history-chip.lang {
+  background: var(--brand-light);
+  color: var(--brand-dark);
+}
+
+.history-chip.project {
+  background: var(--brand);
+  color: var(--on-brand);
+}
+
+.history-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  /* Reserve room for the absolutely-positioned kebab so the title (and its
+     hover ellipsis) always clips before the ⋯ button, never under it. */
+  padding-right: 1.75rem;
+}
+
+.history-rename-input {
+  width: 100%;
+  margin: 0;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink);
+  border: 1px solid var(--brand);
+  border-radius: 6px;
+  padding: 1px 6px;
+  background: var(--panel);
+}
+
+.history-rename-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--brand-light);
+}
+
+.history-kebab {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.5rem;
+  opacity: 0;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.12s ease, background 0.12s ease;
+}
+
+.history-kebab:hover {
+  background: var(--brand-light);
+  color: var(--brand-dark);
+}
+
+.history-kebab svg {
+  width: 16px;
+  height: 16px;
+}
+
+.history-menu {
+  position: absolute;
+  top: 2.4rem;
+  right: 0.6rem;
+  width: 190px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  padding: 6px;
+  z-index: 22;
+  display: none;
+}
+
+.history-menu.open {
+  display: block;
+}
+
+.history-menu-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.history-menu-option:hover {
+  background: var(--bg);
+}
+
+.history-menu-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--muted);
+}
+
+.history-menu-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.history-menu-option.danger {
+  color: var(--danger);
+}
+
+.history-menu-option.danger .history-menu-icon {
+  color: var(--danger);
+}
+
+.history-menu-option.disabled {
+  color: var(--menu-disabled-text);
+  cursor: default;
+}
+
+.history-menu-option.disabled .history-menu-icon {
+  color: var(--menu-disabled-icon);
+}
+
+.history-menu-option.disabled:hover {
+  background: none;
+}
+
+.history-soon {
+  margin-left: auto;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  background: var(--bg);
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+
+.history-project-list {
+  display: none;
+  flex-direction: column;
+  margin: 2px 0 6px;
+  padding-left: 8px;
+  border-left: 2px solid var(--border);
+}
+
+.history-project-list.open {
+  display: flex;
+}
+
+.history-project-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.history-project-row .history-menu-icon {
+  min-width: 15px;
+}
+
+.history-project-row:hover {
+  background: var(--bg);
+}
+
+.history-project-row.active {
+  color: var(--brand-dark);
+  font-weight: 600;
+}
+
+.history-project-new {
+  color: var(--brand-dark);
+}
+
+.history-menu-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 5px 4px;
+}
+
+.history-empty {
+  color: var(--muted);
+  font-size: 0.85rem;
+  padding: 0.75rem;
+}
+
+.drawer-note {
+  color: var(--muted);
+  font-size: 0.72rem;
+  margin: 0;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+.status-message {
+  text-align: center;
+  min-height: 1.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.site-footer {
+  text-align: center;
+  padding: 1rem 1.5rem 2rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 800px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .output-columns {
+    grid-template-columns: 1fr;
+  }
+  .stepper {
+    gap: 0.25rem;
+  }
+  .step-line {
+    width: 24px;
+  }
+}
+
+/* Phones: enlarge touch targets — the page × remove button, the page reorder
+   arrows, and the history kebab (which is always shown here since touch has no
+   hover). */
+@media (max-width: 640px) {
+  /* The fixed header controls (buttons top-left, theme toggle top-right) sit in
+     the same horizontal band as the centered title on desktop, where there's
+     room on both sides. On a phone there isn't, so the tagline ran under the
+     buttons. Lay the two left buttons out in a row (shorter), then drop the
+     centered title/tagline below the whole control band — that frees the full
+     width for the centered text, so nothing overlaps at any phone size. */
+  .header-btns {
+    flex-direction: row;
+  }
+  .site-header {
+    padding-top: 4.5rem;
+  }
+  /* A bit more clearance from the edge than the 1.5rem used elsewhere. */
+  .theme-toggle {
+    right: 1.75rem;
+  }
+
+  .page-remove {
+    width: 30px;
+    height: 30px;
+    top: -9px;
+    right: -9px;
+  }
+  .page-remove svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .reorder-btns {
+    gap: 4px;
+    bottom: 26px;
+    right: -5px;
+  }
+  .reorder-btns button {
+    width: 28px;
+    height: 24px;
+  }
+  .reorder-btns button svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .history-kebab {
+    opacity: 1;
+    width: 36px;
+    height: 36px;
+    top: 0.4rem;
+    right: 0.4rem;
+  }
+  .history-kebab svg {
+    width: 22px;
+    height: 22px;
+  }
+  /* Reserve more room so the larger kebab never overlaps the title. */
+  .history-title-row {
+    padding-right: 2.4rem;
+  }
+}

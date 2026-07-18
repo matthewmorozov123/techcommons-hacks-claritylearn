@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ClarityLearn — Rewrite any page at your reading level</title>
+  <meta
+    name="description"
+    content="Upload a photo of a textbook or worksheet page, or paste text, and ClarityLearn rewrites it at the reading level you choose — with optional translation, read-aloud, and a quick self-quiz."
+  />
+  <meta name="theme-color" content="#0d9488" />
+  <link
+    rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230d9488'/%3E%3Ctext x='50' y='52' font-size='58' text-anchor='middle' dominant-baseline='central'%3E%F0%9F%8E%93%3C/text%3E%3C/svg%3E"
+  />
+
+  <!-- Social / link previews -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="ClarityLearn" />
+  <meta
+    property="og:description"
+    content="Rewrite any textbook or worksheet page at the reading level you need — with translation, read-aloud, and a quick self-quiz."
+  />
+  <meta property="og:url" content="https://claritylearn.vercel.app" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="ClarityLearn" />
+  <meta
+    name="twitter:description"
+    content="Rewrite any textbook or worksheet page at the reading level you need — with translation, read-aloud, and a quick self-quiz."
+  />
+
+  <!-- Resolve the theme before first paint so dark mode never flashes white.
+       Runs inline (not from app.js) because app.js is deferred to end of body. -->
+  <script>
+    (() => {
+      try {
+        const saved = localStorage.getItem("claritylearn_theme");
+        const isDark = saved
+          ? saved === "dark"
+          : window.matchMedia("(prefers-color-scheme: dark)").matches;
+        if (isDark) document.documentElement.setAttribute("data-theme", "dark");
+      } catch (err) {
+        // Storage blocked (private mode) — fall back to the light default.
+      }
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-btns">
+      <button type="button" id="new-chat-btn" class="header-icon-btn newchat" aria-label="New chat" title="New chat">
+        <i data-lucide="plus" aria-hidden="true"></i>
+      </button>
+      <button
+        type="button"
+        id="history-open-btn"
+        class="header-icon-btn"
+        aria-label="Open history"
+        aria-haspopup="dialog"
+        title="History"
+      >
+        <i data-lucide="history" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <button
+      type="button"
+      id="theme-toggle"
+      class="theme-toggle"
+      role="switch"
+      aria-checked="false"
+      aria-label="Dark mode"
+      title="Toggle dark mode"
+    >
+      <span class="toggle-icons" aria-hidden="true">
+        <svg class="toggle-sun" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="4"></circle>
+          <line x1="12" y1="2" x2="12" y2="4"></line>
+          <line x1="12" y1="20" x2="12" y2="22"></line>
+          <line x1="4.9" y1="4.9" x2="6.3" y2="6.3"></line>
+          <line x1="17.7" y1="17.7" x2="19.1" y2="19.1"></line>
+          <line x1="2" y1="12" x2="4" y2="12"></line>
+          <line x1="20" y1="12" x2="22" y2="12"></line>
+          <line x1="4.9" y1="19.1" x2="6.3" y2="17.7"></line>
+          <line x1="17.7" y1="6.3" x2="19.1" y2="4.9"></line>
+        </svg>
+        <svg viewBox="0 0 24 24">
+          <path class="toggle-moon" d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"></path>
+        </svg>
+      </span>
+      <span class="toggle-thumb" aria-hidden="true">
+        <svg class="thumb-sun" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="4"></circle>
+          <line x1="12" y1="2" x2="12" y2="4"></line>
+          <line x1="12" y1="20" x2="12" y2="22"></line>
+          <line x1="4.9" y1="4.9" x2="6.3" y2="6.3"></line>
+          <line x1="17.7" y1="17.7" x2="19.1" y2="19.1"></line>
+          <line x1="2" y1="12" x2="4" y2="12"></line>
+          <line x1="20" y1="12" x2="22" y2="12"></line>
+          <line x1="4.9" y1="19.1" x2="6.3" y2="17.7"></line>
+          <line x1="17.7" y1="6.3" x2="19.1" y2="4.9"></line>
+        </svg>
+        <svg class="thumb-moon" viewBox="0 0 24 24" fill="white">
+          <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"></path>
+        </svg>
+      </span>
+    </button>
+
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
+      <h1>ClarityLearn</h1>
+    </div>
+    <p class="tagline">Upload a page or paste text, then rewrite it at the reading level you need.</p>
+  </header>
+
+  <nav class="stepper" aria-label="Progress">
+    <div class="step" data-step="0">
+      <span class="step-circle" aria-hidden="true"><i data-lucide="upload-cloud"></i></span>
+      <span class="step-label">Upload</span>
+    </div>
+    <div class="step-line" aria-hidden="true"></div>
+    <div class="step" data-step="1">
+      <span class="step-circle" aria-hidden="true"><i data-lucide="settings-2"></i></span>
+      <span class="step-label">Configure</span>
+    </div>
+    <div class="step-line" aria-hidden="true"></div>
+    <div class="step" data-step="2">
+      <span class="step-circle" aria-hidden="true"><i data-lucide="sparkles"></i></span>
+      <span class="step-label">Result</span>
+    </div>
+  </nav>
+
+  <main class="layout">
+    <section class="input-panel" aria-labelledby="input-heading">
+      <h2 id="input-heading">Get your text in</h2>
+
+      <div class="input-tabs" role="tablist" aria-label="Input method">
+        <button type="button" id="tab-upload" class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-upload">
+          Upload photo
+        </button>
+        <button type="button" id="tab-paste" class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-paste">
+          Paste text
+        </button>
+      </div>
+
+      <div id="panel-upload" class="tab-panel" role="tabpanel" aria-labelledby="tab-upload">
+        <label for="image-input" class="dropzone" id="dropzone">
+          <span class="dropzone-icon" aria-hidden="true"><i data-lucide="upload-cloud"></i></span>
+          <span class="dropzone-text">Click to add a page, or drag one here</span>
+          <input type="file" id="image-input" accept="image/*" multiple hidden />
+        </label>
+        <div class="pages-row" id="pages-row"></div>
+        <p class="hint" id="upload-hint">Add one or more pages — they'll be combined in order and analyzed as one passage. Shoot straight-on and avoid shadows.</p>
+      </div>
+
+      <div id="panel-paste" class="tab-panel" hidden role="tabpanel" aria-labelledby="tab-paste">
+        <textarea id="paste-input" placeholder="Paste or type the text you want rewritten here…" rows="10"></textarea>
+      </div>
+    </section>
+
+    <section class="options-panel" aria-labelledby="options-heading">
+      <h2 id="options-heading">Choose how to rewrite it</h2>
+
+      <div class="field">
+        <label for="reading-level">Reading level</label>
+        <select id="reading-level">
+          <option value="elementary">Elementary school</option>
+          <option value="middle-school" selected>Middle school</option>
+          <option value="plain-english">Plain English (for English learners)</option>
+          <option value="summary">Summary</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="target-language" class="field-label">
+          <i data-lucide="languages" class="field-icon" aria-hidden="true"></i>
+          Translate to (optional)
+        </label>
+        <!-- Options are rebuilt by app.js once a page's language is detected:
+             the default option names the detected language, and that language
+             is dropped from the list below. This markup is the pre-detection
+             state (assumes an English source). -->
+        <select id="target-language">
+          <option value="" selected>No translation — keep in English</option>
+          <option value="es">Spanish</option>
+          <option value="fr">French</option>
+          <option value="zh">Chinese (Simplified)</option>
+          <option value="ar">Arabic</option>
+          <option value="vi">Vietnamese</option>
+          <option value="tl">Tagalog</option>
+        </select>
+      </div>
+
+      <button type="button" id="simplify-btn" class="primary-btn" disabled>
+        <i data-lucide="sparkles" class="btn-icon icon-idle" aria-hidden="true"></i>
+        <i data-lucide="loader-2" class="btn-icon icon-loading spin" aria-hidden="true"></i>
+        <span class="btn-label">Analyze &amp; rewrite</span>
+      </button>
+    </section>
+
+    <section class="output-panel" aria-labelledby="output-heading">
+      <div class="card-header">
+        <h2 id="output-heading">Result</h2>
+        <div class="gear-wrap">
+          <button
+            type="button"
+            id="voice-settings-btn"
+            class="gear-btn"
+            aria-label="Voice settings"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-controls="voice-settings-popover"
+          >
+            <i data-lucide="settings" class="btn-icon" aria-hidden="true"></i>
+          </button>
+
+          <div class="popover" id="voice-settings-popover">
+            <p class="popover-title">Voice settings</p>
+            <div class="field">
+              <label for="speed-select">
+                <i data-lucide="gauge" class="field-icon" aria-hidden="true"></i>
+                Speed
+              </label>
+              <select id="speed-select">
+                <option value="0.75">Slow</option>
+                <option value="1" selected>Normal</option>
+                <option value="1.25">Fast</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="voice-select">Voice</label>
+              <select id="voice-select">
+                <option value="marin" selected>Marin (best quality)</option>
+                <option value="cedar">Cedar (best quality)</option>
+                <option value="alloy">Alloy (balanced, neutral)</option>
+                <option value="ash">Ash (clear, articulate)</option>
+                <option value="ballad">Ballad (melodic, expressive)</option>
+                <option value="coral">Coral (warm, engaging)</option>
+                <option value="echo">Echo (resonant, deep)</option>
+                <option value="fable">Fable (storytelling)</option>
+                <option value="nova">Nova (bright, energetic)</option>
+                <option value="onyx">Onyx (rich, authoritative)</option>
+                <option value="sage">Sage (thoughtful, measured)</option>
+                <option value="shimmer">Shimmer (bright, high-pitched)</option>
+                <option value="verse">Verse (dynamic, varied)</option>
+              </select>
+            </div>
+            <button type="button" id="preview-voice-btn" class="secondary-btn preview-btn">
+              <i data-lucide="play" class="btn-icon icon-idle" aria-hidden="true"></i>
+              <i data-lucide="loader-2" class="btn-icon icon-loading spin" aria-hidden="true"></i>
+              <span class="btn-label">Preview voice</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="output-columns">
+        <div class="output-col">
+          <h3>Original</h3>
+          <div id="output-original" class="output-text"></div>
+        </div>
+        <div class="output-col">
+          <h3>Rewritten</h3>
+          <div id="output-rewritten" class="output-text placeholder">Rewritten text will show up here.</div>
+        </div>
+      </div>
+
+      <div class="playback-row">
+        <button type="button" id="read-aloud-btn" class="primary-btn read-aloud-btn" disabled>
+          <i data-lucide="volume-2" class="btn-icon icon-idle" aria-hidden="true"></i>
+          <i data-lucide="square" class="btn-icon icon-active" aria-hidden="true"></i>
+          <span class="btn-label">Read aloud</span>
+        </button>
+
+        <button type="button" id="pause-resume-btn" class="secondary-btn pause-resume-btn" disabled>
+          <i data-lucide="play" class="btn-icon icon-idle" aria-hidden="true"></i>
+          <i data-lucide="pause" class="btn-icon icon-active" aria-hidden="true"></i>
+          <span class="btn-label">Resume</span>
+        </button>
+
+        <button type="button" id="download-btn" class="secondary-btn download-btn" disabled>
+          <i data-lucide="download" class="btn-icon" aria-hidden="true"></i>
+          <span class="btn-label">Download</span>
+        </button>
+      </div>
+
+      <audio id="tts-audio" hidden></audio>
+      <audio id="voice-preview-audio" hidden></audio>
+    </section>
+
+    <section class="quiz-panel" id="quiz-panel" aria-labelledby="quiz-heading" hidden>
+      <div class="quiz-toggle-row" id="quiz-toggle" role="button" tabindex="0" aria-expanded="false" aria-controls="quiz-body">
+        <div class="quiz-toggle-label" id="quiz-heading">
+          <i data-lucide="circle-help" class="btn-icon" aria-hidden="true"></i>
+          Test yourself on this passage
+        </div>
+        <i data-lucide="chevron-down" class="chevron" id="quiz-chevron" aria-hidden="true"></i>
+      </div>
+      <p class="quiz-sub">Optional — 3 quick questions based on what you just read</p>
+
+      <div class="quiz-body" id="quiz-body">
+        <div id="quiz-content"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <p id="status-message" class="status-message" role="status" aria-live="polite"></p>
+
+  <footer class="site-footer">Built by Matthew Morozov for TechCommons · Powered by OpenAI</footer>
+
+  <div class="drawer-backdrop" id="history-backdrop" hidden></div>
+  <aside class="history-drawer" id="history-drawer" role="dialog" aria-modal="true" aria-labelledby="history-drawer-title" hidden>
+    <div class="drawer-header">
+      <h3 id="history-drawer-title">History</h3>
+      <button type="button" id="history-close-btn" class="drawer-close" aria-label="Close history">
+        <i data-lucide="x" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="project-filter-row" id="project-filter-row"></div>
+    <div class="drawer-list" id="history-list"></div>
+    <p class="drawer-note">Saved locally in this browser — clears if you clear site data.</p>
+  </aside>
+
+  <div class="lightbox" id="image-lightbox" role="dialog" aria-label="Image preview" title="Click to close" hidden>
+    <img id="lightbox-img" alt="Full-size page preview" />
+  </div>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="app.js"></script>
+</body>
+</html>
